@@ -1,0 +1,1354 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SketchMotion</title>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/MotionPathPlugin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gif.js.optimized@1.0.1/dist/gif.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+      :root {
+        --bg: #f5f5f7;
+        --canvas-bg: #ffffff;
+        --text: #1d1d1f;
+        --muted: #6e6e73;
+        --accent: #0071e3;
+        --ok: #30d158;
+        --warn: #ff3b30;
+        --border: rgba(0, 0, 0, 0.06);
+        --glass: rgba(255, 255, 255, 0.72);
+        --shadow-soft: 0 2px 16px rgba(0, 0, 0, 0.06);
+        --shadow-float: 0 12px 40px rgba(0, 0, 0, 0.08);
+        --right-w: 280px;
+        --left-w: 250px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+        height: 100vh;
+        overflow: hidden;
+      }
+      .app {
+        display: grid;
+        grid-template-rows: 52px 1fr;
+        height: 100vh;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        background: var(--glass);
+        backdrop-filter: saturate(180%) blur(16px);
+        border-bottom: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+      }
+      .brand {
+        font-weight: 600;
+        font-size: 15px;
+        letter-spacing: -0.02em;
+      }
+      .brand span {
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 12px;
+        margin-left: 8px;
+      }
+      .top-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .btn {
+        border: none;
+        background: rgba(255, 255, 255, 0.95);
+        color: var(--text);
+        padding: 8px 14px;
+        border-radius: 980px;
+        cursor: pointer;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      .btn:hover {
+        background: #fff;
+      }
+      .btn.primary {
+        background: var(--accent);
+        color: #fff;
+        box-shadow: none;
+      }
+      .ico {
+        width: 17px;
+        height: 17px;
+        display: inline-block;
+      }
+      .lucide {
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .main {
+        display: grid;
+        grid-template-columns: var(--left-w) 1fr var(--right-w);
+        min-height: 0;
+        position: relative;
+      }
+      .layer-panel {
+        margin: 16px 0 16px 16px;
+        padding: 14px;
+        border-radius: 16px;
+        background: var(--glass);
+        backdrop-filter: saturate(180%) blur(20px);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-float);
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .layer-panel h2 {
+        margin: 0 0 10px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      #layersList {
+        flex: 1;
+        overflow-y: auto;
+        padding-right: 4px;
+      }
+      .layer-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        margin-bottom: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        border: 1px solid transparent;
+        transition: background 0.15s ease, border-color 0.15s ease;
+      }
+      .layer-row:hover {
+        background: rgba(0, 0, 0, 0.04);
+      }
+      .layer-row.active {
+        background: rgba(0, 113, 227, 0.08);
+        border-color: rgba(0, 113, 227, 0.2);
+      }
+      .layer-row.hover-highlight {
+        outline: 2px solid rgba(0, 113, 227, 0.35);
+        outline-offset: 1px;
+      }
+      .layer-name {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .layer-actions {
+        display: flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .icon-btn {
+        width: 30px;
+        height: 30px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+      }
+      .icon-btn:hover {
+        background: rgba(0, 0, 0, 0.06);
+        color: var(--text);
+      }
+      .icon-btn.on {
+        color: var(--accent);
+      }
+      .center-col {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        padding: 16px 16px 16px 8px;
+        gap: 12px;
+      }
+      .canvas-shell {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .canvas-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 12px;
+        background: var(--canvas-bg);
+        box-shadow: var(--shadow-float);
+        overflow: auto;
+      }
+      #canvas {
+        display: block;
+      }
+      .drop-hint {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        pointer-events: none;
+        color: var(--muted);
+        font-size: 13px;
+        z-index: 0;
+      }
+      .drop-zone {
+        position: absolute;
+        inset: 0;
+        border: 2px dashed transparent;
+        border-radius: 12px;
+        pointer-events: none;
+        z-index: 2;
+      }
+      .drop-zone.active {
+        border-color: rgba(0, 113, 227, 0.45);
+        background: rgba(0, 113, 227, 0.06);
+      }
+      .toolbar-side {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 16px 0;
+      }
+      .tool {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        box-shadow: var(--shadow-soft);
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+      }
+      .tool.active {
+        border-color: rgba(0, 113, 227, 0.35);
+        background: rgba(0, 113, 227, 0.08);
+      }
+      .playback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        border-radius: 980px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-soft);
+        align-self: center;
+      }
+      .playback button {
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+      }
+      .playback button:hover {
+        background: rgba(0, 0, 0, 0.05);
+      }
+      .props {
+        margin: 16px 16px 16px 0;
+        padding: 16px;
+        border-radius: 16px;
+        background: var(--glass);
+        backdrop-filter: saturate(180%) blur(20px);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-float);
+        overflow: auto;
+        transform: translateX(calc(100% + 8px));
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.35s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.25s ease;
+      }
+      .props.visible {
+        transform: translateX(0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .props h2 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      .label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .value {
+        font-size: 12px;
+        color: var(--text);
+        font-variant-numeric: tabular-nums;
+      }
+      select,
+      input[type="range"] {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      select {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        font-size: 13px;
+      }
+      .status {
+        margin-top: 12px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .status.ok {
+        color: var(--ok);
+      }
+      .status.warn {
+        color: var(--warn);
+      }
+      .kbd-hint {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 14px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          SketchMotion<span>SVG → GSAP 动效</span>
+        </div>
+        <div class="top-actions">
+          <label class="btn" for="svgFile"
+            ><i data-lucide="upload" class="ico"></i>导入</label
+          >
+          <input id="svgFile" type="file" accept=".svg,image/svg+xml" hidden />
+          <button type="button" class="btn" id="btnPreview">
+            <i data-lucide="play" class="ico"></i>预览
+          </button>
+          <button type="button" class="btn primary" id="btnExportMenu">
+            <i data-lucide="download" class="ico"></i>导出
+          </button>
+        </div>
+      </header>
+
+      <div class="main">
+        <aside class="layer-panel">
+          <h2>图层</h2>
+          <div id="layersList"></div>
+        </aside>
+
+        <div class="center-col">
+          <div class="canvas-shell" id="canvasWrap">
+            <div class="toolbar-side">
+              <button type="button" class="tool active" id="toolSelect" title="选择 (V)">
+                <i data-lucide="mouse-pointer-click" class="ico"></i>
+              </button>
+              <button type="button" class="tool" id="toolPath" title="绘制路径 (D)">
+                <i data-lucide="pen-tool" class="ico"></i>
+              </button>
+            </div>
+            <div class="canvas-inner">
+              <div class="drop-hint" id="emptyHint">拖入 SVG 或点击顶部「导入」</div>
+              <canvas id="canvas"></canvas>
+              <div class="drop-zone" id="dropZone"></div>
+            </div>
+          </div>
+          <div class="playback">
+            <button type="button" id="btnPlay" title="播放">
+              <i data-lucide="play" class="ico"></i>
+            </button>
+            <button type="button" id="btnPause" title="暂停">
+              <i data-lucide="pause" class="ico"></i>
+            </button>
+          </div>
+        </div>
+
+        <aside class="props" id="propsPanel">
+          <h2 id="propsTitle">属性</h2>
+          <div class="field">
+            <div class="label">图层 ID</div>
+            <div class="value" id="selectedName">—</div>
+          </div>
+          <div class="field">
+            <div class="row">
+              <span class="label">Duration</span>
+              <span class="value" id="durationVal">2.0s</span>
+            </div>
+            <input id="duration" type="range" min="0.1" max="10" step="0.1" value="2" />
+          </div>
+          <div class="field">
+            <div class="label">Easing</div>
+            <select id="easeType">
+              <option value="none">Linear</option>
+              <option value="power1.inOut">Power1.inOut</option>
+              <option value="power2.inOut">Power2.inOut</option>
+              <option value="bounce.out">Bounce.out</option>
+              <option value="elastic.out(1, 0.35)">Elastic.out</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="row">
+              <span class="label">Stagger 延迟</span>
+              <span class="value" id="staggerVal">0.0s</span>
+            </div>
+            <input id="stagger" type="range" min="0" max="3" step="0.05" value="0" />
+          </div>
+          <div class="field">
+            <div class="label">循环</div>
+            <select id="loopMode">
+              <option value="none">单次</option>
+              <option value="repeat">循环</option>
+              <option value="yoyo">往返</option>
+            </select>
+          </div>
+          <div class="field">
+            <button type="button" class="btn" id="applyToSelected" style="width: 100%; justify-content: center">
+              <i data-lucide="refresh-ccw" class="ico"></i>应用参数
+            </button>
+          </div>
+          <div class="status" id="status">就绪</div>
+          <div class="kbd-hint">
+            快捷键：D 路径 · Space 抓手 · ⌘/Ctrl+Z 撤销 · ⌘/Ctrl+Shift+Z 重做 · Delete 删除 · L
+            锁定当前图层
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      if (window.lucide && lucide.createIcons) lucide.createIcons();
+      if (window.gsap && window.MotionPathPlugin) {
+        gsap.registerPlugin(MotionPathPlugin);
+      }
+
+      const canvasEl = document.getElementById("canvas");
+      const canvas = new fabric.Canvas("canvas", {
+        preserveObjectStacking: true,
+        selection: true,
+        background: "#ffffff"
+      });
+
+      const state = {
+        mode: "select",
+        selected: null,
+        drawing: false,
+        drawPoints: [],
+        drawPreview: null,
+        objectAnims: new Map(),
+        objectPaths: new Map(),
+        objectPathStrings: new Map(),
+        objectOrigins: new Map(),
+        layerOrder: [],
+        playing: false,
+        paused: false,
+        panning: false,
+        lastPan: { x: 0, y: 0 },
+        spaceDown: false,
+        undoStack: [],
+        redoStack: [],
+        maxHistory: 40,
+        hoverLayerId: null,
+        /** 有值时画布固定为导入的 SVG 像素尺寸；null 时随窗口填满中间区域 */
+        importedSize: null
+      };
+
+      const ui = {
+        svgFile: document.getElementById("svgFile"),
+        layersList: document.getElementById("layersList"),
+        selectedName: document.getElementById("selectedName"),
+        propsPanel: document.getElementById("propsPanel"),
+        propsTitle: document.getElementById("propsTitle"),
+        duration: document.getElementById("duration"),
+        durationVal: document.getElementById("durationVal"),
+        easeType: document.getElementById("easeType"),
+        stagger: document.getElementById("stagger"),
+        staggerVal: document.getElementById("staggerVal"),
+        loopMode: document.getElementById("loopMode"),
+        status: document.getElementById("status"),
+        toolSelect: document.getElementById("toolSelect"),
+        toolPath: document.getElementById("toolPath"),
+        applyToSelected: document.getElementById("applyToSelected"),
+        canvasWrap: document.getElementById("canvasWrap"),
+        dropZone: document.getElementById("dropZone"),
+        emptyHint: document.getElementById("emptyHint"),
+        btnPreview: document.getElementById("btnPreview"),
+        btnExportMenu: document.getElementById("btnExportMenu"),
+        btnPlay: document.getElementById("btnPlay"),
+        btnPause: document.getElementById("btnPause")
+      };
+
+      function setStatus(text, level = "") {
+        ui.status.className = "status " + level;
+        ui.status.textContent = text;
+      }
+
+      function getObjId(obj) {
+        return obj && (obj.motionId || obj.id || obj.name) ? String(obj.motionId || obj.id || obj.name) : "unknown";
+      }
+
+      function parseSvgIntrinsicSize(svgText) {
+        try {
+          const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
+          const svg = doc.querySelector("svg");
+          if (!svg) return null;
+          const vb = svg.getAttribute("viewBox");
+          if (vb) {
+            const p = vb.trim().split(/[\s,]+/).map(parseFloat);
+            if (p.length >= 4 && p[2] > 0 && p[3] > 0) {
+              return { width: p[2], height: p[3] };
+            }
+          }
+          const wa = svg.getAttribute("width");
+          const ha = svg.getAttribute("height");
+          if (wa && ha) {
+            const w = parseFloat(wa);
+            const h = parseFloat(ha);
+            if (w > 0 && h > 0) return { width: w, height: h };
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function clampSvgSize(size, minSide, maxSide) {
+        let w = size.width;
+        let h = size.height;
+        if (w > maxSide || h > maxSide) {
+          const s = Math.min(maxSide / w, maxSide / h);
+          w *= s;
+          h *= s;
+        }
+        w = Math.max(minSide, Math.round(w));
+        h = Math.max(minSide, Math.round(h));
+        return { width: w, height: h };
+      }
+
+      function applyCanvasDimensions(w, h) {
+        canvas.setDimensions({ width: w, height: h });
+        canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+        canvas.requestRenderAll();
+      }
+
+      function resizeCanvas() {
+        if (state.importedSize) {
+          applyCanvasDimensions(state.importedSize.width, state.importedSize.height);
+          return;
+        }
+        const inner = canvasEl.parentElement;
+        const w = Math.max(320, inner.clientWidth);
+        const h = Math.max(280, inner.clientHeight);
+        applyCanvasDimensions(w, h);
+      }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+
+      function snapshotCanvas() {
+        return JSON.stringify({
+          w: canvas.getWidth(),
+          h: canvas.getHeight(),
+          data: canvas.toJSON(["motionId", "id", "name"])
+        });
+      }
+
+      function pushHistory() {
+        const snap = snapshotCanvas();
+        if (state.undoStack.length && state.undoStack[state.undoStack.length - 1] === snap) return;
+        state.undoStack.push(snap);
+        if (state.undoStack.length > state.maxHistory) state.undoStack.shift();
+        state.redoStack.length = 0;
+      }
+
+      function restoreSnapshot(jsonStr) {
+        killAllAnims();
+        state.objectPaths.clear();
+        state.objectPathStrings.clear();
+        state.objectOrigins.clear();
+        state.layerOrder = [];
+        let data;
+        let w;
+        let h;
+        try {
+          const parsed = typeof jsonStr === "string" ? JSON.parse(jsonStr) : jsonStr;
+          if (parsed && parsed.data && parsed.w != null && parsed.h != null) {
+            data = parsed.data;
+            w = parsed.w;
+            h = parsed.h;
+            state.importedSize = { width: w, height: h };
+          } else if (parsed && parsed.objects) {
+            data = parsed;
+            state.importedSize = null;
+          } else {
+            setStatus("撤销数据格式异常", "warn");
+            return;
+          }
+        } catch (e) {
+          setStatus("撤销数据解析失败", "warn");
+          return;
+        }
+        if (w != null && h != null) {
+          applyCanvasDimensions(w, h);
+        } else {
+          resizeCanvas();
+        }
+        canvas.loadFromJSON(data, () => {
+          canvas.getObjects().forEach((o) => {
+            const id = getObjId(o);
+            if (id && id !== "unknown") state.layerOrder.push(id);
+            wireObject(o);
+          });
+          rebuildLayersPanel();
+          canvas.requestRenderAll();
+          setStatus("已恢复", "ok");
+        });
+      }
+
+      function undo() {
+        if (state.undoStack.length <= 1) return;
+        const current = state.undoStack.pop();
+        state.redoStack.push(current);
+        restoreSnapshot(state.undoStack[state.undoStack.length - 1]);
+      }
+
+      function redo() {
+        if (!state.redoStack.length) return;
+        const next = state.redoStack.pop();
+        state.undoStack.push(next);
+        restoreSnapshot(next);
+      }
+
+      function wireObject(obj) {
+        obj.set({
+          hasControls: true,
+          transparentCorners: false,
+          cornerColor: "rgba(0,113,227,0.5)",
+          borderColor: "rgba(0,113,227,0.35)"
+        });
+      }
+
+      function updatePropsVisibility() {
+        const has = !!state.selected;
+        ui.propsPanel.classList.toggle("visible", has);
+        ui.selectedName.textContent = has ? getObjId(state.selected) : "—";
+      }
+
+      function updateValueBadges() {
+        ui.durationVal.textContent = Number(ui.duration.value).toFixed(1) + "s";
+        ui.staggerVal.textContent = Number(ui.stagger.value).toFixed(2) + "s";
+      }
+      ["input", "change"].forEach((ev) => {
+        ui.duration.addEventListener(ev, updateValueBadges);
+        ui.stagger.addEventListener(ev, updateValueBadges);
+      });
+      updateValueBadges();
+
+      function setMode(mode) {
+        state.mode = mode;
+        canvas.isDrawingMode = false;
+        canvas.defaultCursor = mode === "path" ? "crosshair" : "default";
+        ui.toolSelect.classList.toggle("active", mode === "select");
+        ui.toolPath.classList.toggle("active", mode === "path");
+      }
+
+      ui.toolSelect.addEventListener("click", () => setMode("select"));
+      ui.toolPath.addEventListener("click", () => {
+        if (!state.selected) {
+          setStatus("请先选中图层", "warn");
+          return;
+        }
+        setMode("path");
+      });
+
+      function assignDefaults(obj, idx) {
+        const name =
+          (obj.id && String(obj.id)) ||
+          (obj.name && String(obj.name)) ||
+          `layer-${idx + 1}`;
+        obj.motionId = name;
+        wireObject(obj);
+        if (!state.objectOrigins.has(name)) {
+          state.objectOrigins.set(name, {
+            left: obj.left,
+            top: obj.top,
+            angle: obj.angle || 0,
+            scaleX: obj.scaleX || 1,
+            scaleY: obj.scaleY || 1
+          });
+        }
+      }
+
+      function centerObjects(objects) {
+        if (!objects.length) return;
+        const group = new fabric.Group(objects);
+        group.canvas = canvas;
+        const rect = group.getBoundingRect();
+        const offsetX = canvas.getWidth() / 2 - (rect.left + rect.width / 2);
+        const offsetY = canvas.getHeight() / 2 - (rect.top + rect.height / 2);
+        objects.forEach((obj) => {
+          obj.left += offsetX;
+          obj.top += offsetY;
+          obj.setCoords();
+        });
+      }
+
+      /**
+       * 解析：使用 Fabric 返回的顶层对象数组（每个顶层 <g> / <path> 等对应一项），
+       * 保留 SVG 中的 id → motionId，不做 groupSVGElements 合并。
+       */
+      function handleSVGText(svgText) {
+        const intrinsic = parseSvgIntrinsicSize(svgText);
+        if (intrinsic) {
+          state.importedSize = clampSvgSize(intrinsic, 32, 8192);
+        } else {
+          state.importedSize = null;
+        }
+
+        fabric.loadSVGFromString(svgText, (objects, options) => {
+          canvas.clear();
+          canvas.background = "#ffffff";
+          if (state.importedSize) {
+            applyCanvasDimensions(state.importedSize.width, state.importedSize.height);
+          } else {
+            resizeCanvas();
+          }
+          state.objectAnims.clear();
+          state.objectPaths.clear();
+          state.objectPathStrings.clear();
+          state.objectOrigins.clear();
+          state.layerOrder = [];
+          state.undoStack.length = 0;
+          state.redoStack.length = 0;
+
+          if (!objects || !objects.length) {
+            setStatus("SVG 中未解析到可见对象", "warn");
+            return;
+          }
+
+          objects.forEach((obj, idx) => {
+            assignDefaults(obj, idx);
+            state.layerOrder.push(getObjId(obj));
+            canvas.add(obj);
+          });
+
+          centerObjects(canvas.getObjects().filter((o) => o.motionId));
+          canvas.requestRenderAll();
+          rebuildLayersPanel();
+          ui.emptyHint.style.display = "none";
+          pushHistory();
+          const dim = state.importedSize
+            ? `${state.importedSize.width}×${state.importedSize.height}px`
+            : "自适应";
+          setStatus(`已导入 ${objects.length} 个顶层图层 · 画布 ${dim}`, "ok");
+          if (window.lucide && lucide.createIcons) lucide.createIcons();
+        });
+      }
+
+      function loadSVGFile(file) {
+        if (!file || !file.name.toLowerCase().endsWith(".svg")) {
+          setStatus("请上传 .svg 文件", "warn");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => handleSVGText(String(reader.result || ""));
+        reader.readAsText(file);
+      }
+
+      ui.svgFile.addEventListener("change", (e) => loadSVGFile(e.target.files[0]));
+
+      ["dragenter", "dragover"].forEach((ev) => {
+        ui.canvasWrap.addEventListener(ev, (e) => {
+          e.preventDefault();
+          ui.dropZone.classList.add("active");
+        });
+      });
+      ["dragleave", "drop"].forEach((ev) => {
+        ui.canvasWrap.addEventListener(ev, (e) => {
+          e.preventDefault();
+          ui.dropZone.classList.remove("active");
+        });
+      });
+      ui.canvasWrap.addEventListener("drop", (e) => {
+        const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (f) loadSVGFile(f);
+      });
+
+      function findObjectById(id) {
+        return canvas.getObjects().find((o) => getObjId(o) === id) || null;
+      }
+
+      function setLayerHighlight(id, on) {
+        const obj = findObjectById(id);
+        if (!obj) return;
+        if (on) {
+          if (obj._hlSaved === undefined) {
+            obj._hlSaved = {
+              stroke: obj.stroke,
+              strokeWidth: obj.strokeWidth,
+              hasStroke: obj.stroke != null && obj.stroke !== ""
+            };
+          }
+          obj.set({ stroke: "rgba(0,113,227,0.85)", strokeWidth: (obj._hlSaved.strokeWidth || 0) + 2 });
+        } else if (obj._hlSaved) {
+          obj.set({
+            stroke: obj._hlSaved.hasStroke ? obj._hlSaved.stroke : undefined,
+            strokeWidth: obj._hlSaved.strokeWidth
+          });
+          delete obj._hlSaved;
+        }
+        obj.setCoords();
+        canvas.requestRenderAll();
+      }
+
+      function rebuildLayersPanel() {
+        ui.layersList.innerHTML = "";
+        const ids = state.layerOrder.length
+          ? state.layerOrder.slice()
+          : canvas.getObjects().map((o) => getObjId(o));
+
+        ids.forEach((id) => {
+          const obj = findObjectById(id);
+          if (!obj) return;
+
+          const row = document.createElement("div");
+          row.className = "layer-row";
+          row.dataset.layerId = id;
+          if (state.selected && getObjId(state.selected) === id) row.classList.add("active");
+
+          const nameEl = document.createElement("div");
+          nameEl.className = "layer-name";
+          nameEl.textContent = id;
+
+          const actions = document.createElement("div");
+          actions.className = "layer-actions";
+
+          const visBtn = document.createElement("button");
+          visBtn.type = "button";
+          visBtn.className = "icon-btn on";
+          visBtn.title = "显示/隐藏";
+          visBtn.innerHTML = '<i data-lucide="eye" class="ico"></i>';
+          visBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            obj.visible = !obj.visible;
+            visBtn.classList.toggle("on", obj.visible);
+            pushHistory();
+            canvas.requestRenderAll();
+            if (window.lucide && lucide.createIcons) lucide.createIcons();
+          });
+
+          const lockBtn = document.createElement("button");
+          lockBtn.type = "button";
+          lockBtn.className = "icon-btn";
+          lockBtn.title = "锁定";
+          lockBtn.innerHTML = '<i data-lucide="lock" class="ico"></i>';
+          function syncLockBtn() {
+            const locked = !!(obj.lockMovementX && obj.lockMovementY);
+            lockBtn.classList.toggle("on", locked);
+          }
+          syncLockBtn();
+          lockBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const v = !(obj.lockMovementX && obj.lockMovementY);
+            obj.lockMovementX = v;
+            obj.lockMovementY = v;
+            obj.selectable = !v;
+            obj.evented = !v;
+            syncLockBtn();
+            pushHistory();
+            canvas.requestRenderAll();
+            if (window.lucide && lucide.createIcons) lucide.createIcons();
+          });
+
+          row.addEventListener("click", () => {
+            canvas.setActiveObject(obj);
+            canvas.requestRenderAll();
+          });
+
+          row.addEventListener("mouseenter", () => {
+            if (!obj._origStroke) {
+              obj._origStroke = obj.stroke;
+              obj._origStrokeWidth = obj.strokeWidth || 0;
+            }
+            state.hoverLayerId = id;
+            row.classList.add("hover-highlight");
+            setLayerHighlight(id, true);
+          });
+          row.addEventListener("mouseleave", () => {
+            state.hoverLayerId = null;
+            row.classList.remove("hover-highlight");
+            setLayerHighlight(id, false);
+          });
+
+          actions.appendChild(visBtn);
+          actions.appendChild(lockBtn);
+          row.appendChild(nameEl);
+          row.appendChild(actions);
+          ui.layersList.appendChild(row);
+        });
+
+        if (window.lucide && lucide.createIcons) lucide.createIcons();
+      }
+
+      canvas.on("selection:created", (e) => {
+        state.selected = e.selected && e.selected[0] ? e.selected[0] : null;
+        updatePropsVisibility();
+        rebuildLayersPanel();
+      });
+      canvas.on("selection:updated", (e) => {
+        state.selected = e.selected && e.selected[0] ? e.selected[0] : null;
+        updatePropsVisibility();
+        rebuildLayersPanel();
+      });
+      canvas.on("selection:cleared", () => {
+        state.selected = null;
+        updatePropsVisibility();
+        rebuildLayersPanel();
+      });
+
+      canvas.on("object:modified", () => pushHistory());
+
+      function simplifyPoints(points, minDistance) {
+        if (points.length < 2) return points;
+        const result = [points[0]];
+        for (let i = 1; i < points.length; i++) {
+          const p = points[i];
+          const last = result[result.length - 1];
+          if (Math.hypot(p.x - last.x, p.y - last.y) >= minDistance) result.push(p);
+        }
+        return result;
+      }
+
+      function pointsToSmoothPath(points) {
+        if (points.length < 2) return "";
+        const p = simplifyPoints(points, 3);
+        if (p.length < 2) return "";
+        let d = `M ${p[0].x} ${p[0].y}`;
+        for (let i = 1; i < p.length; i++) {
+          d += ` L ${p[i].x} ${p[i].y}`;
+        }
+        return d;
+      }
+
+      function applyPathToSelected(points) {
+        if (!state.selected || points.length < 2) return;
+        const id = getObjId(state.selected);
+        const d = pointsToSmoothPath(points);
+        state.objectPathStrings.set(id, d);
+        state.objectPaths.set(id, simplifyPoints(points, 2));
+
+        const start = points[0];
+        state.selected.set({ left: start.x, top: start.y, originX: "center", originY: "center" });
+        state.selected.setCoords();
+        canvas.requestRenderAll();
+        setStatus("路径已绑定到 " + id, "ok");
+        pushHistory();
+      }
+
+      canvas.on("mouse:down", (opt) => {
+        if (state.spaceDown) return;
+        if (state.mode !== "path" || !state.selected) return;
+        state.drawing = true;
+        state.drawPoints = [];
+        if (state.drawPreview) {
+          canvas.remove(state.drawPreview);
+          state.drawPreview = null;
+        }
+        const p = canvas.getPointer(opt.e);
+        state.drawPoints.push({ x: p.x, y: p.y });
+      });
+
+      canvas.on("mouse:move", (opt) => {
+        if (state.spaceDown) return;
+        if (!state.drawing || state.mode !== "path") return;
+        const p = canvas.getPointer(opt.e);
+        state.drawPoints.push({ x: p.x, y: p.y });
+        const d = pointsToSmoothPath(state.drawPoints);
+        if (!d) return;
+        if (state.drawPreview) canvas.remove(state.drawPreview);
+        state.drawPreview = new fabric.Path(d, {
+          fill: "",
+          stroke: "rgba(0,113,227,0.45)",
+          strokeDashArray: [6, 6],
+          strokeWidth: 2,
+          selectable: false,
+          evented: false
+        });
+        canvas.add(state.drawPreview);
+        state.drawPreview.sendToBack();
+        canvas.requestRenderAll();
+      });
+
+      canvas.on("mouse:up", () => {
+        if (state.spaceDown) return;
+        if (!state.drawing) return;
+        state.drawing = false;
+        const pts = simplifyPoints(state.drawPoints, 4);
+        applyPathToSelected(pts);
+        if (state.drawPreview) {
+          canvas.remove(state.drawPreview);
+          state.drawPreview = null;
+        }
+        previewSelectedOrAll();
+      });
+
+      function parseEase() {
+        return ui.easeType.value;
+      }
+
+      function killAllAnims() {
+        state.objectAnims.forEach((a) => a && a.kill && a.kill());
+        state.objectAnims.clear();
+      }
+
+      function animateObjectWithMotionPath(obj, delay) {
+        const id = getObjId(obj);
+        const d = state.objectPathStrings.get(id);
+        if (!d || !window.MotionPathPlugin) {
+          const pts = state.objectPaths.get(id);
+          return animateObjectFallback(obj, pts, delay);
+        }
+
+        const origin = state.objectOrigins.get(id) || { left: obj.left, top: obj.top, angle: obj.angle || 0 };
+        const proxy = { x: obj.left, y: obj.top, rotation: obj.angle || 0 };
+        const duration = Number(ui.duration.value);
+        const ease = parseEase();
+        const loop = ui.loopMode.value;
+
+        const vars = {
+          duration,
+          delay,
+          ease: ease,
+          motionPath: {
+            path: d,
+            autoRotate: true,
+            alignOrigin: [0.5, 0.5]
+          },
+          onUpdate: function () {
+            obj.set({
+              left: proxy.x,
+              top: proxy.y,
+              angle: proxy.rotation
+            });
+            obj.setCoords();
+            canvas.requestRenderAll();
+          }
+        };
+        if (loop === "repeat") vars.repeat = -1;
+        if (loop === "yoyo") {
+          vars.repeat = -1;
+          vars.yoyo = true;
+        }
+
+        return gsap.to(proxy, vars);
+      }
+
+      function animateObjectFallback(obj, points, delay) {
+        if (!points || points.length < 2) return null;
+        const proxy = { t: 0 };
+        const duration = Number(ui.duration.value);
+        const ease = parseEase();
+        const loop = ui.loopMode.value;
+        const vars = {
+          t: points.length - 1,
+          duration,
+          delay,
+          ease: ease,
+          onUpdate: () => {
+            const i = Math.floor(proxy.t);
+            const frac = proxy.t - i;
+            const p1 = points[i];
+            const p2 = points[Math.min(i + 1, points.length - 1)];
+            obj.left = p1.x + (p2.x - p1.x) * frac;
+            obj.top = p1.y + (p2.y - p1.y) * frac;
+            obj.angle = (Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180) / Math.PI;
+            obj.setCoords();
+            canvas.requestRenderAll();
+          }
+        };
+        if (loop === "repeat") vars.repeat = -1;
+        if (loop === "yoyo") {
+          vars.repeat = -1;
+          vars.yoyo = true;
+        }
+        return gsap.to(proxy, vars);
+      }
+
+      function previewAll() {
+        killAllAnims();
+        state.playing = true;
+        state.paused = false;
+        const stagger = Number(ui.stagger.value);
+        let idx = 0;
+        canvas.getObjects().forEach((obj) => {
+          const id = getObjId(obj);
+          const d = state.objectPathStrings.get(id);
+          const pts = state.objectPaths.get(id);
+          if (!d && (!pts || pts.length < 2)) return;
+          const anim = animateObjectWithMotionPath(obj, stagger * idx);
+          if (anim) state.objectAnims.set(id, anim);
+          idx++;
+        });
+        if (state.drawPreview) state.drawPreview.visible = false;
+        canvas.requestRenderAll();
+        setStatus("预览播放中", "ok");
+      }
+
+      function previewSelectedOrAll() {
+        if (state.selected) {
+          const id = getObjId(state.selected);
+          const d = state.objectPathStrings.get(id);
+          const pts = state.objectPaths.get(id);
+          if (!d && (!pts || pts.length < 2)) return;
+          killAllAnims();
+          const anim = animateObjectWithMotionPath(state.selected, 0);
+          if (anim) state.objectAnims.set(id, anim);
+          setStatus("预览当前图层", "ok");
+          return;
+        }
+        previewAll();
+      }
+
+      ui.btnPreview.addEventListener("click", () => {
+        previewAll();
+      });
+
+      ui.applyToSelected.addEventListener("click", () => {
+        if (!state.selected) {
+          setStatus("未选中对象", "warn");
+          return;
+        }
+        const id = getObjId(state.selected);
+        const old = state.objectAnims.get(id);
+        if (old) old.kill();
+        const anim = animateObjectWithMotionPath(state.selected, 0);
+        if (anim) state.objectAnims.set(id, anim);
+        setStatus("参数已应用", "ok");
+      });
+
+      ui.btnPlay.addEventListener("click", () => {
+        state.paused = false;
+        state.objectAnims.forEach((a) => a && a.resume && a.resume());
+        if (!state.objectAnims.size) previewAll();
+        setStatus("播放", "ok");
+      });
+
+      ui.btnPause.addEventListener("click", () => {
+        state.paused = true;
+        state.objectAnims.forEach((a) => a && a.pause && a.pause());
+        setStatus("已暂停", "ok");
+      });
+
+      function exportWebM(seconds) {
+        return new Promise((resolve) => {
+          killAllAnims();
+          previewAll();
+          const stream = canvas.lowerCanvasEl.captureStream(30);
+          const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+            ? "video/webm;codecs=vp9"
+            : "video/webm";
+          const rec = new MediaRecorder(stream, { mimeType: mime });
+          const chunks = [];
+          rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+          rec.start();
+          setTimeout(() => {
+            rec.stop();
+            rec.onstop = () => {
+              const blob = new Blob(chunks, { type: "video/webm" });
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = "sketchmotion.webm";
+              a.click();
+              resolve();
+            };
+          }, seconds * 1000);
+        });
+      }
+
+      function exportGIF(seconds) {
+        return new Promise((resolve) => {
+          killAllAnims();
+          previewAll();
+          const gif = new GIF({
+            workers: 2,
+            quality: 12,
+            width: canvas.getWidth(),
+            height: canvas.getHeight(),
+            workerScript: "https://cdn.jsdelivr.net/npm/gif.js.optimized@1.0.1/dist/gif.worker.js",
+            transparent: "0xFFFFFF"
+          });
+          const fps = 12;
+          const frames = Math.floor(seconds * fps);
+          const delay = Math.floor(1000 / fps);
+          let frame = 0;
+          function add() {
+            if (frame >= frames) {
+              gif.render();
+              return;
+            }
+            gif.addFrame(canvas.lowerCanvasEl, { copy: true, delay });
+            frame++;
+            setTimeout(add, delay);
+          }
+          gif.on("finished", (blob) => {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "sketchmotion.gif";
+            a.click();
+            resolve();
+          });
+          add();
+        });
+      }
+
+      ui.btnExportMenu.addEventListener("click", () => {
+        const choice = window.prompt(
+          "导出格式：输入 webm / gif / mp4（mp4 若浏览器不支持将退回 webm）",
+          "webm"
+        );
+        if (!choice) return;
+        const c = choice.trim().toLowerCase();
+        setStatus("正在导出…", "warn");
+        if (c === "gif") {
+          exportGIF(4).then(() => setStatus("GIF 已下载", "ok"));
+        } else if (c === "mp4") {
+          exportWebM(4).then(() => setStatus("已导出（WebM 容器，多数浏览器无原生 MP4 录制）", "ok"));
+        } else {
+          exportWebM(4).then(() => setStatus("WebM 已下载", "ok"));
+        }
+      });
+
+      function deleteSelected() {
+        const o = canvas.getActiveObject();
+        if (!o) return;
+        pushHistory();
+        canvas.remove(o);
+        state.objectPaths.delete(getObjId(o));
+        state.objectPathStrings.delete(getObjId(o));
+        canvas.discardActiveObject();
+        state.selected = null;
+        state.layerOrder = state.layerOrder.filter((id) => id !== getObjId(o));
+        rebuildLayersPanel();
+        updatePropsVisibility();
+        canvas.requestRenderAll();
+        setStatus("已删除", "ok");
+      }
+
+      function toggleLockSelected() {
+        if (!state.selected) return;
+        const o = state.selected;
+        const v = !(o.lockMovementX && o.lockMovementY);
+        o.lockMovementX = v;
+        o.lockMovementY = v;
+        o.selectable = !v;
+        o.evented = !v;
+        rebuildLayersPanel();
+        canvas.requestRenderAll();
+        setStatus(v ? "已锁定" : "已解锁", "ok");
+      }
+
+      window.addEventListener("keydown", (e) => {
+        const mod = e.metaKey || e.ctrlKey;
+        const tag = e.target && e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+        if (mod && e.key.toLowerCase() === "z") {
+          e.preventDefault();
+          if (e.shiftKey) redo();
+          else undo();
+          return;
+        }
+
+        if (e.code === "Space") {
+          e.preventDefault();
+          state.spaceDown = true;
+          canvas.defaultCursor = "grab";
+          return;
+        }
+        if (e.key.toLowerCase() === "d") {
+          e.preventDefault();
+          if (state.selected) setMode("path");
+          return;
+        }
+        if (e.key.toLowerCase() === "l") {
+          e.preventDefault();
+          toggleLockSelected();
+          return;
+        }
+        if (e.key === "Backspace" || e.key === "Delete") {
+          e.preventDefault();
+          deleteSelected();
+        }
+      });
+
+      window.addEventListener("keyup", (e) => {
+        if (e.code === "Space") {
+          state.spaceDown = false;
+          canvas.defaultCursor = state.mode === "path" ? "crosshair" : "default";
+        }
+      });
+
+      canvas.on("mouse:down", (opt) => {
+        if (!state.spaceDown) return;
+        state.panning = true;
+        state.lastPan = { x: opt.e.clientX, y: opt.e.clientY };
+      });
+
+      canvas.on("mouse:move", (opt) => {
+        if (!state.panning || !state.spaceDown) return;
+        const dx = opt.e.clientX - state.lastPan.x;
+        const dy = opt.e.clientY - state.lastPan.y;
+        state.lastPan = { x: opt.e.clientX, y: opt.e.clientY };
+        const v = canvas.viewportTransform;
+        v[4] += dx;
+        v[5] += dy;
+        canvas.requestRenderAll();
+      });
+
+      canvas.on("mouse:up", () => {
+        state.panning = false;
+      });
+
+      updatePropsVisibility();
+      setMode("select");
+    </script>
+  </body>
+</html>
