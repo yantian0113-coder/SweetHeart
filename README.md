@@ -5,6 +5,26 @@
 **Design-support tool for layout grids, typographic presets, pixel rulers, and alignment guides — with a bilingual **English / 中文** UI.**  
 **面向視覺傳達設計的輔助工具：網格、排版預設、像素標尺對齊線與參考線，並支援中英文雙語介面。**
 
+---
+
+## ▶ 線上直接運行（GitHub Pages — 請用這個連結）
+
+**在 README 裡請只放下面這種網址，點了才會像網站一樣開啟程式，而不是看原始碼。**
+
+| 說明 | 連結（複製到 README 或分享給老師） |
+| --- | --- |
+| **主程式（瀏覽器內執行）** | **[https://yantian0113-coder.github.io/SweetHeart/](https://yantian0113-coder.github.io/SweetHeart/)** |
+| 同上（明確寫 index） | [https://yantian0113-coder.github.io/SweetHeart/index.html](https://yantian0113-coder.github.io/SweetHeart/index.html) |
+| 設計簡報頁 | [https://yantian0113-coder.github.io/SweetHeart/presentation.html](https://yantian0113-coder.github.io/SweetHeart/presentation.html) |
+
+**不要用這種「程式碼頁」當主連結**（點進去是 GitHub 閱讀器，**不會**幫你當完整網頁跑起來）：
+
+- `https://github.com/yantian0113-coder/SweetHeart/blob/main/index.html`
+
+若上述 **github.io** 開啟是 **404**，代表還沒開 GitHub Pages，請到倉庫 **Settings → Pages → Build and deployment**，選 **Deploy from a branch**，**Branch：`main`**，資料夾 **/ (root)**，存檔後等 **1～3 分鐘** 再重新整理。
+
+---
+
 **Repository · 倉庫** | **Live App · 線上應用** | **YouTube · 演示** | **GitHub Pages · 簡報**
 
 ---
