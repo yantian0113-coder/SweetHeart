@@ -37,10 +37,10 @@
 
 | Resource · 資源 | URL |
 | --- | --- |
-| **GitHub repository · 倉庫** | https://github.com/yantian0113-coder/SweetHeart|
-| **App (GitHub Pages) · 線上應用** |https://github.com/yantian0113-coder/SweetHeart/blob/main/index.html|
-| **Design deck (GitHub Pages) · 線上簡報** |https://github.com/yantian0113-coder/SweetHeart/blob/main/Smart_Grid_Typography_Studio.pdf|
-| **YouTube demo · 演示影片** | **https://youtu.be/FaBdy5Zuy08?si=-t_AzFj_AGQ7qgeK** |
+| **GitHub repository · 倉庫** | [https://github.com/yantian0113-coder/SweetHeart](https://github.com/yantian0113-coder/SweetHeart) |
+| **App (GitHub Pages) · 線上應用** | [https://yantian0113-coder.github.io/SweetHeart/](https://yantian0113-coder.github.io/SweetHeart/) *(須在 Settings → Pages 啟用，`main` / `(root)`)* |
+| **Design deck (GitHub Pages) · 線上簡報** | [https://yantian0113-coder.github.io/SweetHeart/presentation.html](https://yantian0113-coder.github.io/SweetHeart/presentation.html) |
+| **YouTube demo · 演示影片** | **[https://youtu.be/FaBdy5Zuy08?si=-t_AzFj_AGQ7qgeK](https://youtu.be/FaBdy5Zuy08?si=-t_AzFj_AGQ7qgeK)** |
 
 **Sharing · 分享連結：** 請分享 **GitHub Pages 的 `https://…` 網址**，不要分享本機 `http://localhost`。  
 若對方畫面異常，常見原因為：用 **`file://` 雙擊** 開檔、或未在**正確資料夾**啟動本機 HTTP 伺服器。
