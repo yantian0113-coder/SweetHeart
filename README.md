@@ -38,7 +38,7 @@
 | Resource · 資源 | URL |
 | --- | --- |
 | **GitHub repository · 倉庫** | https://github.com/yantian0113-coder/SweetHeart|
-| **App (GitHub Pages) · 線上應用** |https://github.com/yantian0113-coder/SweetHeart/blob/main/%E3%80%90Code%E3%80%91Smart%20grid%20typography%20studio-guides.html|
+| **App (GitHub Pages) · 線上應用** |https://github.com/yantian0113-coder/SweetHeart/blob/main/index.html|
 | **Design deck (GitHub Pages) · 線上簡報** | smart-grid-typography-studio-guides-i18n.html|
 | **YouTube demo · 演示影片** | **https://youtu.be/FaBdy5Zuy08?si=-t_AzFj_AGQ7qgeK** |
 
