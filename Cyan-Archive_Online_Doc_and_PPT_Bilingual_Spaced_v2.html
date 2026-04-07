@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyan-Archive — 在线文档 & PPT（中英切换）</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css" />
+  <style>
+    :root { color-scheme: dark; }
+    html, body { height: 100%; }
+    body {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "SF Pro Text", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Reading typography (science-friendly) */
+    .reading-shell { max-width: 980px; }
+    .reading {
+      font-size: 17px;
+      line-height: 1.9;
+      letter-spacing: 0.005em;
+      word-break: break-word;
+      color: rgba(234, 243, 255, 0.92); /* brighter, slightly blue-gray for readability */
+    }
+    .reading strong { color: rgba(246, 250, 255, 0.96); }
+    .reading em { color: rgba(234, 243, 255, 0.90); }
+    .reading h1, .reading h2, .reading h3 { color: rgba(248, 252, 255, 0.98); }
+    .reading h1 { font-size: 30px; line-height: 1.25; letter-spacing: -0.01em; margin: 0.2rem 0 1.1rem; }
+    .reading h2 { font-size: 22px; line-height: 1.35; letter-spacing: -0.008em; margin: 2.1rem 0 0.8rem; padding-top: 0.2rem; border-top: 1px solid rgba(255,255,255,0.08); }
+    .reading h3 { font-size: 18px; line-height: 1.45; letter-spacing: -0.006em; margin: 1.3rem 0 0.55rem; }
+    .reading p { margin: 0.9rem 0; }
+    .reading ul, .reading ol { margin: 0.65rem 0 1.05rem 1.25rem; }
+    .reading li { margin: 0.35rem 0; }
+    .reading blockquote {
+      margin: 1rem 0;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid rgba(34,211,238,0.65);
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+    }
+    .reading a { color: #a5d8ff; text-decoration: none; border-bottom: 1px dashed rgba(165,216,255,0.45); }
+    .reading a:hover { border-bottom-color: rgba(125,211,252,0.85); }
+    .reading code { color: rgba(246, 250, 255, 0.96); background: rgba(255,255,255,0.10); padding: 0.12rem 0.36rem; border-radius: 0.5rem; }
+    .reading pre { background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.12); border-radius: 1rem; padding: 1rem; overflow: auto; margin: 1rem 0; }
+    .reading pre code { background: transparent; padding: 0; }
+    .reading hr { border: none; border-top: 1px solid rgba(255,255,255,0.10); margin: 1.6rem 0; }
+
+    .reading table { width: 100%; border-collapse: separate; border-spacing: 0; overflow: hidden; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.03); }
+    .reading th, .reading td { border-bottom: 1px solid rgba(255,255,255,0.12); padding: 0.75rem 0.8rem; vertical-align: top; }
+    .reading tr:last-child td { border-bottom: none; }
+    .reading th { background: rgba(255,255,255,0.08); font-weight: 650; }
+
+    /* Language-specific tweaks */
+    html[data-lang="zh"] .reading { letter-spacing: 0.003em; }
+    html[data-lang="en"] .reading {
+      font-family: ui-serif, Georgia, "Times New Roman", Times, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      letter-spacing: 0.01em;
+      line-height: 1.95;
+      font-size: 17px;
+    }
+    html[data-lang="en"] .reading h1,
+    html[data-lang="en"] .reading h2,
+    html[data-lang="en"] .reading h3 {
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      letter-spacing: -0.012em;
+    }
+
+    /* Reveal: make it airier & more visual */
+    .reveal { height: 100%; }
+    .reveal .slides { text-align: left; }
+    .reveal .slides h2 { letter-spacing: -0.02em; margin-bottom: 0.55rem; }
+    .reveal .slides p, .reveal .slides li { font-size: 0.94em; line-height: 1.45; }
+    .reveal .slides ul { margin-left: 1.1em; }
+    .reveal .slides li { margin: 0.32em 0; }
+    .reveal .slides code { background: rgba(255,255,255,0.10); padding: 0.12em 0.35em; border-radius: 0.4em; }
+    .reveal .slides .muted { color: rgba(255,255,255,0.72); }
+    .reveal .slides .grid-2 { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 16px; align-items: start; }
+    .reveal .slides .card {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+    .reveal .slides .kpi {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .reveal .slides .kpi > div {
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 12px 14px;
+    }
+    .reveal .slides figure { margin: 0.3rem 0 0; }
+    .reveal .slides figcaption { font-size: 0.52em; color: rgba(255,255,255,0.68); margin-top: 0.35rem; }
+    .reveal .slides img {
+      width: 100%;
+      max-height: 420px;
+      object-fit: cover;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.25);
+    }
+  </style>
+</head>
+
+<body class="bg-[#0B1626] text-white overflow-hidden">
+  <div class="h-full w-full flex flex-col">
+    <header class="shrink-0 border-b border-white/10 bg-[#0B1626]/70 backdrop-blur-xl">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3">
+        <div class="w-2.5 h-2.5 rounded-full bg-cyan-300 shadow-[0_0_22px_rgba(34,211,238,0.55)]"></div>
+        <div class="min-w-0">
+          <div id="hdrTitle" class="text-sm font-semibold tracking-tight truncate">Cyan-Archive — 在线查看（舒展排版）</div>
+          <div id="hdrSub" class="text-xs text-white/60 truncate">Planning Document + PPT · 中英切换 · 离线可用</div>
+        </div>
+
+        <div class="ml-auto flex items-center gap-2">
+          <button id="tabDoc" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 transition">文档</button>
+          <button id="tabPpt" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 transition">PPT</button>
+          <div class="w-px h-6 bg-white/10 mx-1"></div>
+
+          <button id="btnLang" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-cyan-500/15 hover:bg-cyan-500/20 border border-cyan-300/20 text-cyan-100 transition">
+            中文 / EN
+          </button>
+          <button id="btnFullscreen" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 transition">全屏</button>
+          <button id="btnPrintPpt" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 transition">打印/导出PPT</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 min-h-0">
+      <!-- DOC -->
+      <section id="viewDoc" class="h-full overflow-auto">
+        <div class="reading-shell mx-auto px-5 py-7">
+          <div class="mb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div id="docTip" class="text-xs text-white/60 leading-relaxed">
+              提示：这是单文件离线页面。若需要“可点击分享的在线链接”，建议上传到 Notion / GitHub Pages / Netlify（保持引用链接可用）。
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btnCopyMd" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 transition">复制Markdown</button>
+              <button id="btnDownloadMd" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 transition">下载Markdown</button>
+            </div>
+          </div>
+          <article id="docRoot" class="reading"></article>
+        </div>
+      </section>
+
+      <!-- PPT -->
+      <section id="viewPpt" class="h-full hidden">
+        <div class="h-full">
+          <div class="reveal">
+            <div id="slidesRoot" class="slides"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script>
+    // ----------------------------
+    // Content (ZH + EN)
+    // ----------------------------
+    const MD_ZH = String.raw`# Cyan-Archive: The Photosynthetic Memory Matrix — Planning Document for BDC 2026
+
+**Project Overview（按要求保留原文）**  
+We are developing "Cyan-Archive" (藍藻記憶檔案館) — a speculative biodesign installation that turns the planet’s oldest oxygen-producing life form, cyanobacteria (藍藻), into a living atmospheric memory archive. 
+
+Cyanobacteria performed oxygenic photosynthesis during the Great Oxidation Event (~2.4–2.1 billion years ago), fundamentally transforming Earth’s atmosphere. In this project, they become “living photographic plates” that record contemporary atmospheric changes through oxygen bubble production and subtle color shifts.
+
+---
+
+## 1. Personal Interest Maps & Intersection Statements
+
+### 个人兴趣图谱（技能 → 媒介 →目标）
+
+- **組員A（视觉传达 / 空间与材料）**
+  - **优势技能**：品牌VI与信息设计、展陈叙事与空间美学、透明材料与结构语言（亚克力/PC）、可视化“数据标签化”系统、可控的制作工艺（激光切割/折弯/卡扣结构）。
+  - **生物兴趣**：可被“看见”的生命过程（光合作用、气泡、色素变化）、低门槛培养体系（BG-11）、可被观众即时影响的微生物响应。
+  - **表达目标**：把“抽象的大气变化”变成“当下可感的经验”，让观者在展场中立刻理解其发生与被改写。
+
+- **組員B（多媒体 / 交互与实时生成）**
+  - **优势技能**：可编程灯光矩阵、实时图像采集与参数提取（webcam / CV）、TouchDesigner节点式实时生成、投影与交互装置搭建。
+  - **数字目标**：用光谱/强度/节律作为输入，把生物反应转译为可读的时间轴与未来情景生成。
+
+### 交集陈述（按Ideation Guide格式）
+
+> **What if we used** *programmable light + computer vision + generative projection*  
+> **to** *modulate and read* *cyanobacteria photosynthetic activity*  
+> **in order to** *turn contemporary atmospheric change into a living, interpretable memory archive*?
+
+一句话电梯陈述（评委/观众版）：
+
+> **“Cyan-Archive 把蓝藻变成‘活的底片’：我们用光与CO₂触发它们的光合作用，并用摄像头把气泡与色彩变化实时翻译成一条正在生成的‘大气记忆时间线’。”**
+
+---
+
+## 2. Bio + Digital Split
+
+> 红旗测试：**去掉生物就不成立**；**去掉数字也不成立**。两层必须承重。
+
+| 模块 | 生物层（Bio）做什么 | 数字层（Digital）做什么 | 为什么两者都不可替代 |
+|---|---|---|---|
+| **输入** | 光谱与强度改变蓝藻光合速率 | 可编程红/蓝光序列作为“写入” | 光是“编码器”，让叙事变成可重复的实验条件 |
+| **核心反应** | 产氧（气泡/溶氧）与细微色偏 | 摄像头读出气泡密度与颜色参数 | 生命反应提供真实性与可被记录的证据链 |
+| **输出/叙事** | 作为“活底片”记录当下痕迹 | TouchDesigner生成时间线投影 | 数字把不可见变可读，把微观转成宏观叙事 |
+| **交互** | 遮光/呼气CO₂改变反应 | 参数映射到视觉（/声音可选） | 观众成为变量，立刻看到“改写”发生 |
+
+---
+
+## 3. 200-word Concept Narrative（Problem → Insight → Solution → Impact）
+
+当我们谈论空气与气候，我们往往只能看到滞后的图表：浓度、曲线、预测区间。真正改变世界的，不是数据本身，而是人们能否在此刻感到——我们正在呼吸的东西正在发生变化。  
+
+地球曾经历一次由微生物改写的大气史：在大氧化事件中，蓝藻通过产氧光合作用，让氧气从几乎不存在变成塑造生命的基础。我们将这种古老的“造氧者”带回当代，让它们成为一种活的记忆介质，像摄影底片一样记录大气的状态。  
+
+**Cyan-Archive** 是一座透明的光合记忆矩阵。模块化的亚克力/PC结构像夜间城市的骨架，承载装有蓝藻培养液的透明管瓶。可编程红/蓝光序列作为“写入”；摄像头实时读取气泡密度与色调微变化，将其转译为动态生成的 **Atmospheric Memory Timeline** 投影：从清澈天空到雾霾光晕、从稳定到剧烈波动的未来图景。观众遮光或向联动舱呼气 CO₂，会即时改写蓝藻的响应，也同步改写时间线。  
+
+作品提出问题：**如果微生物一直在为地球“记忆并塑形”空气，我们该如何与它们共处？**在“Convergent Life”语境下，它把人类、AI与最古老生命放进同一条可见的呼吸回路。
+
+---
+
+## 4. Research Brief
+
+### 4.1 生物可行性（学生友好、可展示）
+
+- **培养基**：BG-11 为淡水蓝藻的经典培养基之一，公开配方可直接引用（Rippka et al., 1979）。例如 CPCC 给出配方、用途与 pH 建议：\`https://uwaterloo.ca/canadian-phycological-culture-centre/cultures/culture-media/bg-11\`
+- **可视化信号**：光合会产生氧气并可能在容器中形成可观察气泡/溶氧变化；色素与色调会随光谱、光强与营养条件出现可测变化（需以你们容器尺度做对照实验验证并建立参数化方法）。
+- **安全**：优先选择可追溯来源、教学/研究常用、低风险菌株；封闭容器展示；遵循学校生物安全规范。
+
+### 4.2 GOE（大氧化事件）关键背书文献
+
+- Lyons, Reinhard, Planavsky. *Nature* (2014). “The rise of oxygen in Earth’s early ocean and atmosphere.” \`https://www.nature.com/articles/nature13068\`
+- Planavsky et al. *Nature Geoscience* (2014). “Evidence for oxygenic photosynthesis half a billion years before the Great Oxidation Event.” \`https://www.nature.com/articles/ngeo2122\`
+
+### 4.3 2025 先例（living cyanobacteria / living materials）
+
+- ETH Zurich（2025）光合活材料与展览语境：\`https://ethz.ch/en/news-and-events/eth-news/news/2025/06/a-building-material-that-lives-and-stores-carbon.html\`
+- Venice Biennale 2025 加拿大馆 Picoplanktonics：\`https://www.archdaily.com/1030289/canada-pavilion-presents-picoplanktonics-a-living-experiment-in-regenerative-architecture-at-the-2025-venice-biennale\`
+
+---
+
+## 5. Deliverables Plan（MVP / Target / Stretch）
+
+| BDC交付物 | MVP | Target | Stretch | Owner |
+|---|---|---|---|---|
+| 10-min presentation | 叙事骨架 + demo录屏 | 完整故事弧 + Q&A备答 | 双人交替叙事（科学↔诗性） | 組員A / 組員B |
+| Visual renderings | 总览 + 爆炸图 | 夜城场景、交互、标签系统 | VI手册页 + 展墙信息图 | 你 |
+| Physical prototype | 1模块 + 管瓶 | 2×2/3×3拼接 + 真培养液（封闭） | 展陈级收边 + 交互道具 | 組員A / 組員B |
+| Video (1–5 min) | 60–90秒预告 | 2–3分钟完整预告片 | 微距证据镜头 + 生成画面并置 | 共同 |
+| Website | 单页说明 | 滚动叙事 + 透明AI说明 | 在线时间线demo | 搭档 / 你 |
+
+---
+
+## 6. Prototype & Technical Stack（低代码、可演示优先）
+
+- **结构**：激光切割 + 折线/插片/卡扣 → 模块互锁矩阵（便于扩展与运输）  
+- **写入**：可编程红/蓝 LED（强度/节律/情景预设）  
+- **读取**：固定曝光/白平衡 webcam；ROI 统计气泡 proxy 与颜色参数  
+- **生成**：TouchDesigner（TOP/CHOP）实时可视化与投影输出  
+- **AI策略**：受约束生成（风格/情景库插值），明确“不作为科学预测器”，保持可解释映射
+
+---
+
+## 7. 4-Week Sprint Plan
+
+| Week | Phase | Milestone | Owner |
+|---|---|---|---|
+| 1 | Discovery | 选菌株/容器；灯控v0；读取指标v0；叙事大纲 | 組員A / 組員B |
+| 2 | Prototyping | 结构样机；培养启动；TD时间线v0；微距素材 | 組員A / 組員B |
+| 3 | Integration | 写入-读取-投影-交互串联；VI上墙；系统图 | 組員A / 組員B |
+| 4 | Polish | PPT定稿+彩排；视频成片；网站上线；伦理与风险页 | 共同 |
+
+---
+
+## 8. Reflection & Risk Mitigation
+
+- **AI透明**：公开参数映射与生成边界，避免“预测”误导  
+- **照护伦理**：将照护作为设计的一部分（stewardship）  
+- **失败预案**：气泡/色偏不明显→微距+对照+长时记录；实时链路不稳→离线数据回放兜底；培养失败→多瓶备份与封闭体系
+
+---
+
+## References（可点击）
+
+- BG-11 medium（CPCC / Rippka et al., 1979）：\`https://uwaterloo.ca/canadian-phycological-culture-centre/cultures/culture-media/bg-11\`  
+- GOE review（Lyons et al., 2014, Nature）：\`https://www.nature.com/articles/nature13068\`  
+- Oxygenic photosynthesis timing（Planavsky et al., 2014, Nat Geosci）：\`https://www.nature.com/articles/ngeo2122\`  
+- ETH 2025 living material（news）：\`https://ethz.ch/en/news-and-events/eth-news/news/2025/06/a-building-material-that-lives-and-stores-carbon.html\`  
+- Venice 2025 Picoplanktonics（ArchDaily）：\`https://www.archdaily.com/1030289/canada-pavilion-presents-picoplanktonics-a-living-experiment-in-regenerative-architecture-at-the-2025-venice-biennale\`
+`;
+
+    const MD_EN = String.raw`# Cyan-Archive: The Photosynthetic Memory Matrix — Planning Document for BDC 2026
+
+**Project Overview (use this exact description):**  
+We are developing "Cyan-Archive" (藍藻記憶檔案館) — a speculative biodesign installation that turns the planet’s oldest oxygen-producing life form, cyanobacteria (藍藻), into a living atmospheric memory archive. 
+
+Cyanobacteria performed oxygenic photosynthesis during the Great Oxidation Event (~2.4–2.1 billion years ago), fundamentally transforming Earth’s atmosphere. In this project, they become “living photographic plates” that record contemporary atmospheric changes through oxygen bubble production and subtle color shifts.
+
+---
+
+## 1. Personal Interest Maps & Intersection Statements
+
+### How the concept emerged from our skills
+
+- **Member A (Visual Communication Design)**
+  - **Strengths**: visual identity systems (VI), information design, exhibition/spatial aesthetics, transparent material languages (acrylic / polycarbonate), modular fabrication (laser cutting, folding, interlocking joints), and “archival” labeling systems for scientific-looking artifacts.
+  - **Biological interests**: biological processes that are legible to audiences (photosynthesis, gas evolution, pigment shifts) and student-feasible cultivation (e.g., BG-11 workflows) that can be responsibly exhibited.
+  - **Design objective**: convert abstract atmospheric change (often reduced to delayed charts) into an immediate, embodied, and interpretable experience.
+
+- **Member B (Multimedia / Real-time Systems)**
+  - **Strengths**: programmable light matrices, real-time image acquisition and feature extraction (webcam + light-weight computer vision), node-based generative systems (TouchDesigner), projection and interactive installation buildout.
+  - **Digital objective**: use spectrum / intensity / rhythm as controllable inputs; translate living outputs into a legible timeline that can be read as “memory.”
+
+### Intersection statement (Ideation Guide format)
+
+> **What if we used** *programmable light + computer vision + generative projection*  
+> **to** *modulate and read* *cyanobacteria photosynthetic activity*  
+> **in order to** *turn contemporary atmospheric change into a living, interpretable memory archive*?
+
+One-sentence pitch:
+
+> **Cyan-Archive turns cyanobacteria into “living photographic plates”: light and CO₂ act as inputs, and a camera translates oxygen bubbles and subtle color drift into a real-time Atmospheric Memory Timeline.**
+
+---
+
+## 2. Bio + Digital Split
+
+**Red-flag test**: if biology is removed, the work collapses into mere visual effects; if computation is removed, it collapses into a static culture display. Both layers must remain load-bearing.
+
+| Component | Biological layer (Bio) | Digital layer (Digital) | Why both layers are essential |
+|---|---|---|---|
+| Input | cyanobacteria respond to spectrum/intensity via photosynthesis rate | programmable red/blue light sequences as “writing” | light becomes a repeatable, exhibit-ready encoding mechanism |
+| Core signal | oxygen evolution (bubbles/DO proxy) + micro pigment/tonal drift | webcam extracts bubble density proxies + color metrics | living response provides the evidentiary substrate (not simulated data) |
+| Output | “living plate” retains traces of current conditions | TouchDesigner generates the Atmospheric Memory Timeline | computation makes the invisible legible and narratable |
+| Interaction | blocking light / exhaled CO₂ changes response | mapping to visual (and optional sound) parameters | the audience becomes a variable—cause/effect is immediate |
+
+---
+
+## 3. 200-word Concept Narrative (Problem → Insight → Solution → Impact)
+
+When we speak about air and climate, we are usually handed delayed charts—concentrations, curves, confidence intervals. Yet what changes behavior is rarely the data alone; it is the ability to feel that the atmosphere is changing **now**, through our own bodies and breath.  
+
+Earth’s atmosphere has been rewritten by microorganisms before. During the Great Oxidation Event, cyanobacteria—through oxygenic photosynthesis—helped shift oxygen from near absence into a planetary condition for complex life. We bring these ancient “oxygen makers” into the present as a living recording medium: a speculative archive that treats cyanobacteria as photographic plates, registering atmospheric conditions through oxygen bubble production and subtle pigment drift.  
+
+**Cyan-Archive** is a transparent photosynthetic memory matrix: a modular acrylic/polycarbonate structure, like a cyber-biological “night city,” holding culture vessels within a clear, interlocking grid. Programmable red/blue light sequences act as a controllable “write” signal. A simple webcam reads bubble-density proxies and micro color changes in real time, feeding parameters into TouchDesigner to generate an AI-assisted **Atmospheric Memory Timeline**—a projection that visualizes possible future skies (clarity, haze, halos, volatility). Audience actions—blocking light or exhaling CO₂ into a linked chamber—immediately perturb the culture and the timeline.  
+
+If microorganisms are Earth’s memory, how should we coexist with them? Under the 2026 “Convergent Life” theme, Cyan-Archive links humans, AI, and the planet’s oldest life into a single visible breathing loop.
+
+---
+
+## 4. Research Brief
+
+### 4.1 Biological feasibility (student-friendly, exhibit-ready)
+
+- **Medium**: BG-11 is a widely used freshwater cyanobacteria medium with publicly documented formulations referencing Rippka et al. (1979). A culture-center reference is available here: \`https://uwaterloo.ca/canadian-phycological-culture-centre/cultures/culture-media/bg-11\`
+- **Legible signals**: oxygen evolution can manifest as measurable gas/DO dynamics; pigmentation/tonal drift can be induced by spectral and growth-condition changes (to be validated via your container scale and controlled imaging setup).
+- **Safety**: use traceable, education/research-standard strains and closed vessels; comply with institutional biosafety protocols.
+
+### 4.2 Great Oxidation Event references
+
+- Lyons, Reinhard, Planavsky. *Nature* (2014). “The rise of oxygen in Earth’s early ocean and atmosphere.” \`https://www.nature.com/articles/nature13068\`
+- Planavsky et al. *Nature Geoscience* (2014). “Evidence for oxygenic photosynthesis half a billion years before the Great Oxidation Event.” \`https://www.nature.com/articles/ngeo2122\`
+
+### 4.3 2025 precedent projects (living cyanobacteria / architecture)
+
+- ETH Zurich (2025) photosynthetic living material and exhibition context: \`https://ethz.ch/en/news-and-events/eth-news/news/2025/06/a-building-material-that-lives-and-stores-carbon.html\`
+- Venice Architecture Biennale 2025—Canada Pavilion “Picoplanktonics”: \`https://www.archdaily.com/1030289/canada-pavilion-presents-picoplanktonics-a-living-experiment-in-regenerative-architecture-at-the-2025-venice-biennale\`
+
+---
+
+## 5. Deliverables Plan (MVP / Target / Stretch)
+
+| Required deliverable | MVP | Target | Stretch | Owner |
+|---|---|---|---|---|
+| 10-min presentation | narrative spine + demo recording | full arc + Q&A bank | dual-voice “science ↔ poetic” performance | Member A / Member B |
+| Visual renderings | hero view + exploded diagram | night-city scene + interactions + labeling | VI mini-manual + exhibition wall infographics | Me |
+| Physical model/prototype | one module + vessels | 2×2/3×3 matrix + live closed cultures | exhibition-grade finish + interaction props | Member A / Member B |
+| Video (1–5 min) | 60–90s teaser | 2–3 min trailer with real demo | macro evidence shots + split-screen with generative output | Both |
+| Website (recommended) | single-page overview | scroll narrative + AI transparency | online timeline demo (pre-recorded data OK) | Partner / Me |
+
+---
+
+## 6. Prototype & Technical Stack (low-code, demo-first)
+
+- **Fabrication**: laser-cut acrylic/PC + folding/interlocking joints → modular matrix  
+- **Write signal**: programmable red/blue LEDs (intensity / rhythm / presets)  
+- **Read signal**: fixed white balance/exposure webcam; ROI statistics (bubble proxy + color metrics)  
+- **Real-time**: TouchDesigner TOP/CHOP pipeline → projection output  
+- **AI policy**: constrained generation (scenario library & interpolation), explicitly **not** a scientific predictor; maintain explainable mappings
+
+---
+
+## 7. 4-Week Sprint Plan
+
+| Week | Phase | Milestone | Owner |
+|---|---|---|---|
+| 1 | Discovery | strains/vessels; light v0; sensing v0; narrative outline | Member A / Member B |
+| 2 | Prototyping | module mock; cultures start; TD timeline v0; macro footage | Member A / Member B |
+| 3 | Integration | full write-read-project loop; VI labels; system diagrams | Member A / Member B |
+| 4 | Polish | slides + rehearsals; final video; site; ethics/risk page | Both |
+
+---
+
+## 8. Reflection & Risk Mitigation
+
+- **AI transparency**: disclose mappings, limits, and generation boundaries to avoid “prediction” claims  
+- **Stewardship**: make care and maintenance an explicit design element  
+- **Failure-proofing**: weak bubbles/colors → macro + controls + time-lapse; unstable real-time → offline playback fallback; culture failure → parallel backups and closed-system display
+
+---
+
+## References (clickable)
+
+- BG-11 medium (CPCC / Rippka et al., 1979): \`https://uwaterloo.ca/canadian-phycological-culture-centre/cultures/culture-media/bg-11\`  
+- GOE review (Lyons et al., 2014, Nature): \`https://www.nature.com/articles/nature13068\`  
+- Oxygenic photosynthesis timing (Planavsky et al., 2014, Nat Geosci): \`https://www.nature.com/articles/ngeo2122\`  
+- ETH 2025 living material (news): \`https://ethz.ch/en/news-and-events/eth-news/news/2025/06/a-building-material-that-lives-and-stores-carbon.html\`  
+- Venice 2025 Picoplanktonics (ArchDaily): \`https://www.archdaily.com/1030289/canada-pavilion-presents-picoplanktonics-a-living-experiment-in-regenerative-architecture-at-the-2025-venice-biennale\`
+`;
+
+    // Image refs (hotlink may vary by network/CORS; we keep links + optional embeds)
+    const REF = {
+      eth: {
+        page: "https://ethz.ch/en/news-and-events/eth-news/news/2025/06/a-building-material-that-lives-and-stores-carbon.html",
+        img: "https://ethz.ch/en/news-and-events/eth-news/news/2025/06/a-building-material-that-lives-and-stores-carbon/_jcr_content/wide_content/slideshow/images/item0.imageformat.slideshow.1356090819.jpg",
+        captionZh: "ETH Zurich（2025）：光合活材料结构示意（新闻稿图，点击可查看原文）。",
+        captionEn: "ETH Zurich (2025): photosynthetic living material structure (press image; click for source)."
+      },
+      archdaily: {
+        page: "https://www.archdaily.com/1030289/canada-pavilion-presents-picoplanktonics-a-living-experiment-in-regenerative-architecture-at-the-2025-venice-biennale"
+      }
+    };
+
+    // ----------------------------
+    // Marked renderer tweaks
+    // ----------------------------
+    marked.setOptions({ gfm: true, breaks: true });
+
+    // ----------------------------
+    // UI state
+    // ----------------------------
+    const viewDoc = document.getElementById('viewDoc');
+    const viewPpt = document.getElementById('viewPpt');
+    const tabDoc = document.getElementById('tabDoc');
+    const tabPpt = document.getElementById('tabPpt');
+    const btnLang = document.getElementById('btnLang');
+    const slidesRoot = document.getElementById('slidesRoot');
+
+    const i18n = {
+      zh: {
+        hdrTitle: "Cyan-Archive — 在线查看（舒展排版）",
+        hdrSub: "Planning Document + PPT · 中英切换 · 离线可用",
+        docTip: "提示：这是单文件离线页面。若需要“可点击分享的在线链接”，建议上传到 Notion / GitHub Pages / Netlify（保持引用链接可用）。",
+        tabDoc: "文档",
+        tabPpt: "PPT",
+        fullscreen: "全屏",
+        print: "打印/导出PPT",
+        copy: "复制Markdown",
+        download: "下载Markdown",
+        toastCopy: "已复制 Markdown",
+      },
+      en: {
+        hdrTitle: "Cyan-Archive — Online Viewer (Spacious Typography)",
+        hdrSub: "Planning Document + Slides · Bilingual · Works offline",
+        docTip: "Tip: this is a single-file offline page. For a shareable link, upload it to Notion / GitHub Pages / Netlify (so references remain clickable).",
+        tabDoc: "Document",
+        tabPpt: "Slides",
+        fullscreen: "Fullscreen",
+        print: "Print/Export Slides",
+        copy: "Copy Markdown",
+        download: "Download Markdown",
+        toastCopy: "Markdown copied",
+      }
+    };
+
+    let state = {
+      lang: "zh",
+      active: "doc",
+    };
+
+    function setActive(tab) {
+      state.active = tab;
+      const isDoc = tab === 'doc';
+      viewDoc.classList.toggle('hidden', !isDoc);
+      viewPpt.classList.toggle('hidden', isDoc);
+      tabDoc.className = isDoc
+        ? "px-3 py-1.5 text-xs font-medium rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 transition"
+        : "px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 transition";
+      tabPpt.className = !isDoc
+        ? "px-3 py-1.5 text-xs font-medium rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 transition"
+        : "px-3 py-1.5 text-xs font-medium rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 transition";
+
+      if (!isDoc) {
+        setTimeout(() => { try { window._reveal && window._reveal.layout(); } catch (_) {} }, 40);
+      }
+    }
+
+    function setLang(lang) {
+      state.lang = lang;
+      document.documentElement.setAttribute('data-lang', lang);
+      document.documentElement.lang = (lang === "zh") ? "zh-Hans" : "en";
+
+      const t = i18n[lang];
+      document.getElementById('hdrTitle').textContent = t.hdrTitle;
+      document.getElementById('hdrSub').textContent = t.hdrSub;
+      document.getElementById('docTip').textContent = t.docTip;
+      tabDoc.textContent = t.tabDoc;
+      tabPpt.textContent = t.tabPpt;
+      document.getElementById('btnFullscreen').textContent = t.fullscreen;
+      document.getElementById('btnPrintPpt').textContent = t.print;
+      document.getElementById('btnCopyMd').textContent = t.copy;
+      document.getElementById('btnDownloadMd').textContent = t.download;
+
+      // Render doc
+      const md = (lang === "zh") ? MD_ZH : MD_EN;
+      document.getElementById('docRoot').innerHTML = marked.parse(md);
+
+      // Re-mount slides
+      mountReveal(lang);
+    }
+
+    // ----------------------------
+    // Slides (more detailed + images + links)
+    // ----------------------------
+    function slidesHtml(lang) {
+      const isZh = lang === "zh";
+      const title = isZh ? "Cyan-Archive（藍藻記憶檔案館）" : "Cyan-Archive (Cyanobacterial Archive)";
+      const subtitle = isZh ? "The Photosynthetic Memory Matrix — BDC 2026" : "The Photosynthetic Memory Matrix — BDC 2026";
+      const oneLiner = isZh
+        ? "把蓝藻变成“活底片”：用光与 CO₂ 写入，用摄像头读出，把气泡与色偏转译成正在生成的大气记忆时间线。"
+        : "Turn cyanobacteria into “living photographic plates”: write with light and CO₂, read with a camera, and translate bubbles + micro color drift into an Atmospheric Memory Timeline.";
+
+      const overviewHeading = isZh ? "Project Overview（官方描述原文）" : "Project Overview (Exact Description)";
+
+      const storyHook = isZh
+        ? "如果微生物是地球的记忆，我们应如何与它们共处？"
+        : "If microorganisms are Earth’s memory, how should we coexist with them?";
+
+      const refsBlock = isZh
+        ? `<div class="card"><div class="text-sm font-semibold">参考链接</div>
+            <ul class="text-sm mt-2">
+              <li><a href="${REF.eth.page}" target="_blank" rel="noreferrer">ETH Zurich 2025：A building material that lives and stores carbon</a></li>
+              <li><a href="${REF.archdaily.page}" target="_blank" rel="noreferrer">Venice 2025：Picoplanktonics（ArchDaily）</a></li>
+              <li><a href="https://www.nature.com/articles/nature13068" target="_blank" rel="noreferrer">Lyons et al., 2014 (Nature)：氧化历史综述</a></li>
+              <li><a href="https://www.nature.com/articles/ngeo2122" target="_blank" rel="noreferrer">Planavsky et al., 2014 (Nat Geosci)：光合出现时间证据</a></li>
+              <li><a href="https://uwaterloo.ca/canadian-phycological-culture-centre/cultures/culture-media/bg-11" target="_blank" rel="noreferrer">BG-11（CPCC）配方与引用</a></li>
+            </ul></div>`
+        : `<div class="card"><div class="text-sm font-semibold">References</div>
+            <ul class="text-sm mt-2">
+              <li><a href="${REF.eth.page}" target="_blank" rel="noreferrer">ETH Zurich (2025): A building material that lives and stores carbon</a></li>
+              <li><a href="${REF.archdaily.page}" target="_blank" rel="noreferrer">Venice 2025: Picoplanktonics (ArchDaily)</a></li>
+              <li><a href="https://www.nature.com/articles/nature13068" target="_blank" rel="noreferrer">Lyons et al., 2014 (Nature): oxygenation review</a></li>
+              <li><a href="https://www.nature.com/articles/ngeo2122" target="_blank" rel="noreferrer">Planavsky et al., 2014 (Nat Geosci): timing evidence</a></li>
+              <li><a href="https://uwaterloo.ca/canadian-phycological-culture-centre/cultures/culture-media/bg-11" target="_blank" rel="noreferrer">BG-11 (CPCC): formulation reference</a></li>
+            </ul></div>`;
+
+      return `
+        <section data-background-gradient="radial-gradient(circle at 20% 15%, rgba(34,211,238,0.20) 0%, rgba(7,16,28,1) 52%, rgba(0,0,0,1) 100%)">
+          <h2>${title}</h2>
+          <p class="muted">${subtitle}</p>
+          <div class="kpi">
+            <div><div class="text-sm font-semibold">Bio</div><div class="text-xs muted mt-1">${isZh ? "蓝藻光合作用：气泡 + 色偏（真实输出）" : "Cyanobacteria photosynthesis: bubbles + micro pigment drift (real output)"}</div></div>
+            <div><div class="text-sm font-semibold">Digital</div><div class="text-xs muted mt-1">${isZh ? "灯光写入 + 摄像头读取 + TouchDesigner 实时生成" : "Write with light + read by webcam + real-time generation in TouchDesigner"}</div></div>
+            <div><div class="text-sm font-semibold">Judging Fit</div><div class="text-xs muted mt-1">${isZh ? "Biodigital Excellence · Digital Submission · Narrative" : "Biodigital Excellence · Digital Submission · Narrative"}</div></div>
+          </div>
+          <p class="mt-6"><strong>${isZh ? "一句话" : "One-liner"}：</strong>${oneLiner}</p>
+          <p class="muted mt-2">${storyHook}</p>
+        </section>
+
+        <section>
+          <h2>${isZh ? "问题：为什么需要新的“可读证据”" : "Problem: why we need a new kind of legible evidence"}</h2>
+          <div class="grid-2">
+            <div class="card">
+              <ul>
+                <li>${isZh ? "<strong>大气变化常被“图表化”</strong>：延迟、抽象、缺乏身体尺度的即时反馈。" : "<strong>Atmospheric change is often charted</strong>: delayed, abstract, and disconnected from embodied experience."}</li>
+                <li>${isZh ? "<strong>观众很难形成因果直觉</strong>：‘我做了什么’与‘空气如何变化’之间缺少可见桥梁。" : "<strong>Audiences lack causal intuition</strong>: we rarely see how individual actions perturb atmospheric conditions."}</li>
+                <li>${isZh ? "<strong>BDC评审偏好</strong>：把不可见过程做成可判断的证据链（如 Chornozem 的CV + 生物检测）。" : "<strong>BDC judges reward</strong>: evidence chains that make invisible processes legible (e.g., Chornozem’s CV + bio detection)."}</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="text-sm font-semibold">${isZh ? "设计目标" : "Design objective"}</div>
+              <p class="mt-2">${isZh ? "把空气的变化变成一个<strong>可被写入、可被读取、可被投影叙事化</strong>的“活档案”。" : "Make air change <strong>writable, readable, and narratable</strong> as a living archive."}</p>
+              <p class="muted">${isZh ? "关键词：即时性（real-time）·证据链（evidence）·可解释（explainable）" : "Keywords: real-time · evidence · explainable mapping"}</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>${overviewHeading}</h2>
+          <p>We are developing "Cyan-Archive" (藍藻記憶檔案館) — a speculative biodesign installation that turns the planet’s oldest oxygen-producing life form, cyanobacteria (藍藻), into a living atmospheric memory archive.</p>
+          <p>Cyanobacteria performed oxygenic photosynthesis during the Great Oxidation Event (~2.4–2.1 billion years ago), fundamentally transforming Earth’s atmosphere. In this project, they become “living photographic plates” that record contemporary atmospheric changes through oxygen bubble production and subtle color shifts.</p>
+        </section>
+
+        <section>
+          <h2>${isZh ? "核心体验（观众看到什么）" : "Core experience (what the audience sees)"}</h2>
+          <div class="grid-2">
+            <div class="card">
+              <ul>
+                <li>${isZh ? "<strong>透明夜城矩阵</strong>：管瓶像城市灯塔，生命反应在暗场中被放大。" : "<strong>Transparent night-city matrix</strong>: vessels read as luminous towers; living signals become visible in low light."}</li>
+                <li>${isZh ? "<strong>氧气泡与色偏</strong>：微观的发生被摄像头记录为可读参数。" : "<strong>Bubbles + micro color drift</strong>: microscopic changes are captured as readable parameters."}</li>
+                <li>${isZh ? "<strong>时间线投影</strong>：参数驱动生成的“Atmospheric Memory Timeline”。" : "<strong>Timeline projection</strong>: an “Atmospheric Memory Timeline” driven by measured parameters."}</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="text-sm font-semibold">${isZh ? "交互（因果即时可见）" : "Interaction (immediate causality)"}</div>
+              <ul class="mt-2">
+                <li>${isZh ? "<strong>遮光</strong>：改变写入光 → 改变生物输出 → 改变时间线。" : "<strong>Blocking light</strong>: alters input → alters biology → alters timeline."}</li>
+                <li>${isZh ? "<strong>呼气CO₂</strong>：作为变量进入联动舱，强化‘呼吸回路’叙事。" : "<strong>Exhaled CO₂</strong>: introduced via a linked chamber to materialize the “breathing loop.”"}</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>${isZh ? "系统结构（写入 → 读取 → 转译）" : "System architecture (write → read → translate)"}</h2>
+          <div class="card">
+            <p><strong>${isZh ? "输入" : "Input"}</strong>：${isZh ? "可编程红/蓝光谱、强度、节律（预设情景序列）" : "programmable red/blue spectrum, intensity, rhythm (scenario presets)"}</p>
+            <p><strong>${isZh ? "生物反应" : "Biological response"}</strong>：${isZh ? "光合速率变化 → 气泡/溶氧变化 + 色素/色调漂移" : "photosynthesis-rate changes → bubble/DO dynamics + pigment/tonal drift"}</p>
+            <p><strong>${isZh ? "读取" : "Readout"}</strong>：${isZh ? "webcam 固定曝光/白平衡；ROI 提取 bubble proxy 与颜色参数" : "webcam with fixed exposure/white balance; ROI metrics for bubble proxy and color"}</p>
+            <p><strong>${isZh ? "生成" : "Generation"}</strong>：${isZh ? "TouchDesigner 参数映射 → 时间线投影（可选声音）" : "TouchDesigner parameter mapping → projected timeline (optional audio)"}</p>
+            <p class="muted">${isZh ? "AI定位：受约束生成（情景库/插值），不作为科学预测器；强调可解释与透明。" : "AI role: constrained generation (scenario library/interpolation), not a scientific predictor; prioritize transparency and explainability."}</p>
+          </div>
+        </section>
+
+        <section>
+          <h2>${isZh ? "参考先例（2025）与定位差异" : "Precedents (2025) and differentiation"}</h2>
+          <div class="grid-2">
+            <div class="card">
+              <figure>
+                <a href="${REF.eth.page}" target="_blank" rel="noreferrer"><img src="${REF.eth.img}" alt="ETH Zurich 2025 living material" /></a>
+                <figcaption>${isZh ? REF.eth.captionZh : REF.eth.captionEn}</figcaption>
+              </figure>
+            </div>
+            <div class="card">
+              <ul>
+                <li>${isZh ? "<strong>对标</strong>：Picoplanktonics（威尼斯双年展）体现“活材料 + 数字制造 + 照护”。" : "<strong>Benchmark</strong>: Picoplanktonics (Venice Biennale) demonstrates living materials + digital fabrication + stewardship."}</li>
+                <li>${isZh ? "<strong>差异化</strong>：从“材料性能/碳封存”转向“记忆介质/信息设计/时间线叙事”。" : "<strong>Differentiation</strong>: shift from material performance/carbon capture to memory medium, information design, and timeline narrative."}</li>
+                <li>${isZh ? "<strong>你们的优势</strong>：视觉系统（VI + 标签 + 展陈）把生物输出“档案化”，让评委快速读懂。" : "<strong>Your advantage</strong>: a coherent visual system (VI + labels + exhibition graphics) that archivalizes biological outputs for rapid comprehension."}</li>
+              </ul>
+              ${refsBlock}
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>${isZh ? "交付物（评委快速抓取）" : "Deliverables (judge-ready at a glance)"}</h2>
+          <div class="card">
+            <ul>
+              <li>${isZh ? "<strong>10分钟演示</strong>：故事弧 + 现场/录屏demo + Q&A备答（Bio/Digital承重、证据链、伦理）。" : "<strong>10-min talk</strong>: clear arc + live/recorded demo + Q&A bank (load-bearing split, evidence chain, ethics)."}</li>
+              <li>${isZh ? "<strong>渲染与系统图</strong>：夜城总览、爆炸图、交互流程、参数映射图、VI标签系统。" : "<strong>Renderings & diagrams</strong>: hero scene, exploded view, interaction flow, mapping diagram, VI label system."}</li>
+              <li>${isZh ? "<strong>物理原型</strong>：模块矩阵 + 封闭容器 + 灯控；可扩展到展陈级。" : "<strong>Physical prototype</strong>: modular matrix + closed vessels + light control; scalable to exhibition display."}</li>
+              <li>${isZh ? "<strong>视频与网站</strong>：微距证据镜头 + 生成画面并置；网站滚动叙事 + AI透明说明。" : "<strong>Video & site</strong>: macro evidence shots + generative split-screen; scroll narrative + AI transparency page."}</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2>${isZh ? "4周冲刺计划（现实可做）" : "4-week sprint plan (realistic build)"}</h2>
+          <div class="card">
+            <ul>
+              <li><strong>W1</strong> ${isZh ? "Discovery：选容器与菌株范围；灯控v0；读取指标v0；叙事大纲。" : "Discovery: decide vessel/strain scope; light v0; sensing v0; narrative outline."}</li>
+              <li><strong>W2</strong> ${isZh ? "Prototyping：结构样机；培养启动（对照组）；TD时间线v0；微距素材。" : "Prototyping: module mock; culture start (controls); TD timeline v0; macro footage."}</li>
+              <li><strong>W3</strong> ${isZh ? "Integration：写入-读取-投影串联；遮光/CO₂交互；VI上墙。" : "Integration: full write-read-project loop; light/CO₂ interaction; VI and diagrams."}</li>
+              <li><strong>W4</strong> ${isZh ? "Polish：PPT定稿与彩排；视频成片；网站上线；风险与伦理页。" : "Polish: final slides + rehearsals; final video; website; risk/ethics page."}</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2>${isZh ? "风险与伦理（Reflection加分）" : "Risk & ethics (Reflection points)"}</h2>
+          <div class="grid-2">
+            <div class="card">
+              <div class="text-sm font-semibold">${isZh ? "常见失败模式" : "Common failure modes"}</div>
+              <ul class="mt-2">
+                <li>${isZh ? "<strong>气泡/色偏弱</strong>：用微距+侧光+对照+长时记录增强证据。" : "<strong>Weak bubbles/colors</strong>: macro optics + side-light + controls + time-lapse."}</li>
+                <li>${isZh ? "<strong>实时不稳</strong>：离线数据回放兜底（展览不掉线）。" : "<strong>Real-time instability</strong>: offline playback fallback (exhibition-proof)."}</li>
+                <li>${isZh ? "<strong>培养失败</strong>：多瓶备份 + 封闭容器 + 合规处理流程。" : "<strong>Culture failure</strong>: parallel backups + closed vessels + compliance protocols."}</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="text-sm font-semibold">${isZh ? "伦理与AI透明" : "Ethics & AI transparency"}</div>
+              <ul class="mt-2">
+                <li>${isZh ? "<strong>不做科学预测</strong>：时间线为受约束的叙事推演，清楚标注边界。" : "<strong>No prediction claims</strong>: timeline is constrained narrative extrapolation with explicit limits."}</li>
+                <li>${isZh ? "<strong>照护即设计</strong>：将维护与照护写入展陈语言（stewardship）。" : "<strong>Stewardship</strong>: care/maintenance becomes part of the exhibit language."}</li>
+                <li>${isZh ? "<strong>可解释映射</strong>：公开参数来源、映射方式与失败记录。" : "<strong>Explainable mapping</strong>: publish parameter sources, mappings, and failures."}</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section data-background-gradient="radial-gradient(circle at 80% 20%, rgba(34,211,238,0.16) 0%, rgba(7,16,28,1) 56%, rgba(0,0,0,1) 100%)">
+          <h2>${isZh ? "Closing" : "Closing"}</h2>
+          <p><strong>${isZh ? "我们把蓝藻从“背景生命”变成“共同作者”。" : "We reposition cyanobacteria from background life to co-author."}</strong></p>
+          <p class="muted">${isZh ? "在 Convergent Life 语境中，Cyan-Archive 让人类、AI 与最古老的造氧者在同一条可见呼吸回路里协作与共存。" : "Under “Convergent Life,” Cyan-Archive binds humans, AI, and ancient oxygen-makers into a single visible breathing loop."}</p>
+          <div class="card mt-4">
+            <div class="text-sm font-semibold">${isZh ? "Q&A 关键词" : "Q&A keywords"}</div>
+            <p class="mt-2">${isZh ? "Bio/Digital 承重 · 证据链 · 安全与合规 · AI边界与透明 · 照护伦理 · 可扩展展陈" : "Load-bearing split · evidence chain · biosafety/compliance · AI boundaries · stewardship · scalable exhibition display"}</p>
+          </div>
+        </section>
+      `;
+    }
+
+    function mountReveal(lang) {
+      // Replace slides HTML
+      slidesRoot.innerHTML = slidesHtml(lang);
+
+      // (Re)initialize reveal
+      try {
+        if (window._reveal && window._reveal.isReady && window._reveal.destroy) {
+          window._reveal.destroy();
+        }
+      } catch (_) {}
+
+      window._reveal = new Reveal(document.querySelector('.reveal'), {
+        hash: true,
+        controls: true,
+        progress: true,
+        slideNumber: true,
+        center: false,
+        transition: 'fade',
+        backgroundTransition: 'fade'
+      });
+      window._reveal.initialize();
+    }
+
+    // ----------------------------
+    // Events
+    // ----------------------------
+    tabDoc.addEventListener('click', () => setActive('doc'));
+    tabPpt.addEventListener('click', () => setActive('ppt'));
+
+    btnLang.addEventListener('click', () => {
+      const next = (state.lang === "zh") ? "en" : "zh";
+      setLang(next);
+      toast(state.lang === "zh" ? "已切换为中文" : "Switched to English");
+    });
+
+    document.getElementById('btnFullscreen').addEventListener('click', async () => {
+      const el = document.documentElement;
+      if (!document.fullscreenElement) await el.requestFullscreen();
+      else await document.exitFullscreen();
+    });
+
+    document.getElementById('btnPrintPpt').addEventListener('click', () => {
+      setActive('ppt');
+      const url = new URL(window.location.href);
+      url.searchParams.set('print-pdf', '1');
+      url.searchParams.set('lang', state.lang);
+      window.open(url.toString(), '_blank', 'noopener,noreferrer');
+    });
+
+    document.getElementById('btnCopyMd').addEventListener('click', async () => {
+      const md = (state.lang === "zh") ? MD_ZH : MD_EN;
+      await navigator.clipboard.writeText(md);
+      toast(i18n[state.lang].toastCopy);
+    });
+
+    document.getElementById('btnDownloadMd').addEventListener('click', () => {
+      const md = (state.lang === "zh") ? MD_ZH : MD_EN;
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = (state.lang === "zh")
+        ? 'Cyan-Archive_Planning_Document_for_BDC2026_ZH.md'
+        : 'Cyan-Archive_Planning_Document_for_BDC2026_EN.md';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    // Tiny toast
+    const toastEl = document.createElement('div');
+    toastEl.className = "fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] hidden px-4 py-2 rounded-xl bg-white/15 border border-white/15 backdrop-blur-md text-sm text-white/95 shadow-lg";
+    document.body.appendChild(toastEl);
+    let toastTimer = null;
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.add('hidden'), 1300);
+    }
+
+    // ----------------------------
+    // Initial boot (supports URL params)
+    // ----------------------------
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialLang = (urlParams.get('lang') === 'en') ? 'en' : 'zh';
+    const initialTab = (urlParams.get('ppt') === '1' || window.location.hash.includes('/')) ? 'ppt' : 'doc';
+
+    setLang(initialLang);
+    setActive(initialTab);
+  </script>
+</body>
+</html>
+
